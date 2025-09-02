@@ -7,6 +7,17 @@ int fd;
  * release memory and other cleanups
  */
 void loader_cleanup(){
+  if(fd >= 0){
+    close(fd);
+  }
+  if(ehdr){
+    free(ehdr);
+    ehdr = NULL;
+  }
+  if(phdr){
+    free(phdr);
+    phdr = NULL;
+  }
 
 }
 
