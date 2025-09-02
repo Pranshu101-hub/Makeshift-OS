@@ -46,5 +46,6 @@ Also managed program execution, cleanup, and error handling.
 
 ---
 
-**Link - https://github.com/Patdew2/Operating-Systems/tree/main**
+**Link - https://github.com/Pranshu101-hub/OperatingSystems-Assignment**
+
 
