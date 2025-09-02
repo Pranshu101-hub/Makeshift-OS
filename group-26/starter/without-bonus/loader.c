@@ -96,6 +96,46 @@ int main(int argc, char** argv)
     printf("Usage: %s <ELF Executable> \n",argv[0]);
     exit(1);
   }
+  // 3. Allocate memory of the size "p_memsz" using mmap function 
+  //    and then copy the segment content
+  void *mem = mmap(NULL,phdr_load->p_memsz, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS| MAP_PRIVATE, 0,0);
+  if(mem == MAP_FAILED){
+    perror("Memory mapping failed");
+    loader_cleanup();
+    exit(1);
+  }
+  
+  if(lseek(fd,phdr_load->p_offset, SEEK_SET) < 0){
+    perror("Failed to seek segment");
+    loader_cleanup();
+    exit(1);
+  }
+  ssize_t segment_read_bytes = read(fd, mem, phdr_load->p_filesz);
+  if (segment_read_bytes < 0) {
+    perror("Failed to read segment data");
+    loader_cleanup();
+    exit(1);
+
+} else if (segment_read_bytes != (ssize_t)phdr_load->p_filesz) {
+    perror("Error: Incomplete segment read ");
+    loader_cleanup();
+    exit(1);
+}
+  // 4. Navigate to the entrypoint address into the segment loaded in the memory in above step
+  int (_start)() = (int()()) (mem + (ehdr->e_entry - phdr_load->p_vaddr));
+  // 5. Typecast the address to that of a function pointer matching the "_start" method in fib.c.
+  // 6. Call the "_start" method and print the value returned from the "_start"
+  int result = _start();
+  printf("User _start return value = %d\n", result);
+}
+
+int main(int argc, char** argv) 
+{
+  if(argc != 2) {
+    printf("Usage: %s <ELF Executable> \n",argv[0]);
+    exit(1);
+  }
+
   // 1. carry out necessary checks on the input ELF file
   // 2. passing it to the loader for carrying out the loading/execution
   load_and_run_elf(argv);
