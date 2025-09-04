@@ -86,9 +86,6 @@ void load_and_run_elf(char** exe){
     loader_cleanup();
     exit(1);
   }
-  int result = _start();
-  printf("User _start return value = %d\n", result);
-}
 
 
 // 3. Allocate memory of the size "p_memsz" using mmap function 
