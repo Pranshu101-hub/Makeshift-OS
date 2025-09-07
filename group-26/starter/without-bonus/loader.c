@@ -116,6 +116,7 @@ if (segment_read_bytes < 0) {
   // 4. Navigate to the entrypoint address into the segment loaded in the memory in above step
   int (_start)() = (int()()) (mem + (ehdr->e_entry - phdr_load->p_vaddr));
   // 5. Typecast the address to that of a function pointer matching the "_start" method in fib.c.
+  // done with step 4.
   // 6. Call the "_start" method and print the value returned from the "_start"
   int result = _start();
   printf("User _start return value = %d\n", result);
