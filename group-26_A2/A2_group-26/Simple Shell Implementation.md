@@ -27,18 +27,14 @@ Signal Handling: The shell catches the SIGINT signal (Ctrl+C) using a custom han
 
 **GitHub Link - https://github.com/Pranshu101-hub/OperatingSystems-Assignment/tree/main/group-26_A2/A2_group-26
 
-Contributions:
-Dewang -
-1.** Implemented command execution via process creation (fork, execvp, wait).
+**Contributions:**
+*Dewang -*
+1. Implemented command execution via process creation (fork, execvp, wait).
+2. Built pipeline execution (single and multi-stage pipe handling with proper redirection).
+3. Added argument parsing and input reading with safe memory management.
+4. Integrated program entry point (main) with cleanup before exit.
 
-2\. Built pipeline execution (single and multi-stage pipe handling with proper redirection).
-
-3\. Added argument parsing and input reading with safe memory management.
-
-4\. Integrated program entry point (main) with cleanup before exit.
-
-**Pranshu -**
-
+*Pranshu -*
 1. Implemented command history management (storing, printing, and cleanup).
 2. Wrote logic for graceful signal handling (Ctrl+C → show history \& exit).
 3. Designed time formatting utilities for better log readability.
@@ -51,4 +47,5 @@ Dewang -
 
 
    
+
 
