@@ -73,3 +73,145 @@ void handle_sigint(int sig) {
     }
     exit(0);
 }
+
+// uses fgets to prevent buffer overflows and removes the trailing newline character.
+
+char* read_cmdline() {
+    char* line = malloc(sizeof(char) * MAX_CMD_LEN);
+    if (!line) {
+        perror("malloc failed");
+        exit(EXIT_FAILURE);
+    }
+    if (!fgets(line, MAX_CMD_LEN, stdin)) {
+        printf("\n"); 
+        exit(0);
+    }
+    line[strcspn(line, "\n")] = 0; //remove trailing \n
+    return line;
+}
+
+//uses strtok to tokenize the input string by spaces. The last element of the args array is set to NULL as required by execvp.
+
+void parse_arguments(char* line, char** args) {
+    int i = 0;
+    char* token = strtok(line, " ");
+    while (token != NULL && i < MAX_ARGS - 1) {
+        args[i++] = token;
+        token = strtok(NULL, " ");
+    }
+    args[i] = NULL;
+}
+
+// this function forks a new process. The child process executes the command using execvp. The parent process waits for the child to complete, records the execution time, 
+// and adds the command to the history.
+
+void exec_cmd(char** args, char* og_cmd) {
+    struct timeval start, end;
+    pid_t pid;
+    gettimeofday(&start, NULL);
+    pid = fork();
+    if (pid == -1) {
+        perror("fork failed");
+        return;
+    } else if (pid == 0) { // child process
+        if (execvp(args[0], args) == -1) {
+            perror("execvp failed");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+        gettimeofday(&end, NULL);
+        add_to_history(og_cmd, pid, start, end);
+    }
+}
+
+
+// this function handles both single commands with pipes and multiple pipes. It creates a chain of child processes and connects their standard I/O using pipes.
+
+void exec_pipecmd(char* command) {
+    char* original_command = strdup(command);
+    char* commands[MAX_ARGS];
+    int num_commands = 0;
+    
+    // 1. Split the command string by '|' to get individual commands
+    char* token = strtok(command, "|");
+    while(token != NULL) {
+        commands[num_commands++] = token;
+        token = strtok(NULL, "|");
+    }
+
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+
+    int input_fd = STDIN_FILENO; // The input for the first command is stdin
+    pid_t pids[num_commands];
+
+    // 2. Loop through each command and set up the pipeline
+    for (int i = 0; i < num_commands; i++) {
+        int pipefd[2];
+
+        // Create a pipe for all but the last command
+        if (i < num_commands - 1) {
+            if (pipe(pipefd) == -1) {
+                perror("pipe failed");
+                free(original_command);
+                return;
+            }
+        }
+
+        pids[i] = fork();
+        if (pids[i] < 0) {
+            perror("fork failed");
+            free(original_command);
+            return;
+        }
+
+        if (pids[i] == 0) {
+            // child
+            if (input_fd != STDIN_FILENO) { // redirect input if it's not the first command
+                dup2(input_fd, STDIN_FILENO);
+                close(input_fd);
+            }
+
+            // redirect output if it's not the last command
+            if (i < num_commands - 1) {
+                dup2(pipefd[1], STDOUT_FILENO);
+                // child doesn't need the pipe endpoints after dup2
+                close(pipefd[0]);
+                close(pipefd[1]);
+            }
+            
+            char* args[MAX_ARGS]; // parse and execute the current command
+            parse_arguments(commands[i], args);
+            if (execvp(args[0], args) == -1) {
+                perror("execvp failed");
+                exit(EXIT_FAILURE);
+            }
+        } 
+        else {
+            //parent
+            // Close the previous input FD if it's not stdin
+            if (input_fd != STDIN_FILENO) {
+                close(input_fd);
+            }
+            
+            // for the next iteration the input will be the read-end of the current pipe
+            if (i < num_commands - 1) {
+                close(pipefd[1]); // parent doesn't need the write-end
+                input_fd = pipefd[0];
+            }
+        }
+    }
+
+    // 3. Wait for all child processes to finish
+    for (int i = 0; i < num_commands; i++) {
+        waitpid(pids[i], NULL, 0);
+    }
+    gettimeofday(&end, NULL);
+    
+    // Add to history, using the PID of the last command in the pipeline
+    add_to_history(original_command, pids[num_commands - 1], start, end);
+    free(original_command);
+}
