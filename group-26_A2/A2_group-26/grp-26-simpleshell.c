@@ -204,7 +204,6 @@ void exec_pipecmd(char* command) {
             }
         }
     }
-
     // 3. Wait for all child processes to finish
     for (int i = 0; i < num_commands; i++) {
         waitpid(pids[i], NULL, 0);
@@ -214,4 +213,59 @@ void exec_pipecmd(char* command) {
     // Add to history, using the PID of the last command in the pipeline
     add_to_history(original_command, pids[num_commands - 1], start, end);
     free(original_command);
+}
+
+// continuously displays a prompt, reads user input, and dispatches the command for execution, handling builtin commands like 'history' and 'exit'.
+
+void shell_loop() {
+    char* line;
+    char* args[MAX_ARGS];
+    char* line_copy_for_history;
+
+    signal(SIGINT, handle_sigint);
+
+    while (1) {
+        printf("ospansu:~$ ");
+        line = read_cmdline();
+
+        if (strlen(line) == 0) {
+            free(line);
+            continue;
+        }
+        line_copy_for_history = strdup(line);// handle built-in commands
+        if (strcmp(line, "exit") == 0) { 
+            free(line); 
+            free(line_copy_for_history);
+            break;
+        }
+
+        if (strcmp(line, "history") == 0) {
+            // for the built-in 'history', we don't fork, so we manually create a history entry
+            struct timeval start, end;
+            gettimeofday(&start, NULL);
+            display_history();
+            gettimeofday(&end, NULL);
+            add_to_history(line_copy_for_history, getpid(), start, end);
+            free(line);
+            free(line_copy_for_history);
+            continue;
+        }
+        if (strchr(line, '|')) {
+            exec_pipecmd(line);
+        } else {
+            parse_arguments(line, args);
+            exec_cmd(args, line_copy_for_history);
+        }
+        free(line);
+        free(line_copy_for_history);
+    }
+}
+
+//main entry point of the program.
+int main() {
+    shell_loop();
+    for (int i = 0; i < histc; i++) { //clean up allocated memory before exiting normally
+        free(history_log[i].cmd_str);
+    }
+    return EXIT_SUCCESS;
 }
