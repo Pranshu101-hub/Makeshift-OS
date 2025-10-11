@@ -1,0 +1,91 @@
+Structure: 
+
+The project consists of the following files:
+
+dummy_main.h – Defines the process pausing mechanism.
+
+shell.c – Implements the command shell and job manager.
+
+simplescheduler.c – Contains the round-robin scheduling algorithm.
+
+test_1.c – A lightweight test program for simple CPU-bound computation.
+
+test_2.c – A heavy computational test program performing matrix multiplication.
+
+Compilation Instructions
+
+All components are compiled using GCC. The shell and scheduler are compiled separately, while test programs are compiled along with the dummy_main.h file to ensure proper pausing and signal-based control.
+
+Usage
+
+The system is started by running the shell executable with two parameters:
+
+The number of CPU cores to simulate.
+
+The time slice duration in milliseconds.
+
+Inside the shell, users can submit jobs for execution, view command history, or gracefully shut down the system. On exit, all resources are cleaned up and a summary of job statistics is displayed.
+
+Key Features
+
+1. Preemptive Scheduling
+Implements preemption using SIGSTOP and SIGCONT signals for process control.
+Jobs start in a paused state using dummy_main.h and are resumed only when CPU time is allocated by the scheduler.
+
+2. Round-Robin Algorithm
+Uses a configurable time quantum and supports multiple CPU cores.
+Maintains a ready queue for fair scheduling and tracks each job’s state (READY, RUNNING, FINISHED).
+
+3. Job Management
+Tracks completion time and waiting time for all jobs.
+Maintains a command history with process IDs and timing information.
+Ensures graceful shutdown with detailed statistics display.
+
+4. Process Communication
+Uses shared memory for communication between the shell and the scheduler.
+No pipe-based communication is required.
+Ensures clean process termination and synchronization between modules.
+
+Test Programs
+
+test_1.c performs a lightweight CPU-bound computation such as repeated summations, with periodic progress reporting.
+
+test_2.c performs a heavy workload involving 400×400 matrix multiplication, providing progress updates periodically.
+
+These programs demonstrate how the scheduler handles both light and heavy processes under the same scheduling policy.
+
+Implementation Details
+
+Shell (shell.c)
+Implements an interactive command-line interface for submitting jobs and viewing history.
+Manages shared memory segments for communication and handles signals for graceful exit.
+
+Scheduler (simplescheduler.c)
+Implements the core round-robin algorithm with time-slice management and multiple CPU support.
+Maintains ready queues, assigns jobs to available CPUs, and manages job states and statistics.
+
+Process Control (dummy_main.h)
+Intercepts each program’s main function to pause it at startup, enabling controlled resumption by the scheduler.
+
+Output
+
+When the system shuts down, it displays job completion statistics, waiting time analysis, and the command history along with execution details for all jobs executed during the session.
+
+Signal Handling
+
+The system handles Ctrl+C (SIGINT) gracefully by displaying the command history before exiting.
+It ensures clean process termination and shared memory cleanup after shutdown.
+
+Notes
+
+All executables must be compiled with dummy_main.h to ensure proper scheduling behavior.
+The system demonstrates preemptive multitasking entirely in user space, without any kernel modifications, making it suitable for understanding fundamental CPU scheduling concepts.
+
+Member Contributions
+
+Dewang: Implemented the round-robin scheduling logic, process control using signals, time-slice management, and multi-CPU support in simplescheduler.c.
+
+Pranshu: Developed the interactive shell interface, command parser, job history tracking, and shared memory management in shell.c.
+Both members collaborated on debugging, testing, integrating dummy_main.h, and preparing documentation.
+
+GitHub Repository Link - 
