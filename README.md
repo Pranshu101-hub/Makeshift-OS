@@ -2,7 +2,7 @@
 
 This repository contains a collection of five core Operating System components implemented from scratch in C and C++. These projects were developed as part of the **CSE 231: Operating Systems** course. The primary objective was to interact directly with Unix system calls, handle memory management manually, and build essential system utilities without relying on high-level abstractions or standard libraries where prohibited.
 
-## 🛠 Technologies & Tools
+## Technologies & Tools
 * **Languages:** C, C++ (Limited to C++11 Lambda support for Multithreading) 
 * **System APIs:** Unix/Linux System Calls (`mmap`, `fork`, `exec`, `signal`, `pthread`) 
 * **Concepts:** ELF Parsing, Demand Paging, Process Scheduling, IPC (Pipes), Concurrency 
